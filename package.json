@@ -1,25 +1,25 @@
 {
-  "name": "syslog-sink",
+  "name": "es-log",
   "types": ["module"],
-  "version": "1.4",
-  "homepage": "http://github.com/shinken-monitoring/mod-syslog-sink",
-  "author": "Jean Gabès",
-  "description": "Export data to a syslog server",
+  "version": "0.4",
+  "homepage": "https://github.com/Frescha/mod-es-log",
+  "author": "Andreas Karfusehr",
+  "description": "Export data to a Elasticsearch server",
   "contributors": [
     {
-      "name": "Jean Gabès",
-      "email": "naparuba@gmail.com"
+      "name": "Andreas Karfusehr",
+      "email": "frescha@unitedseed.de"
     }
   ],
-  "repository": "https://github.com/shinken-monitoring/mod-syslog-sink",
+  "repository": "https://github.com/Frescha/mod-es-log",
   "keywords": [
     "module",
     "broker",
     "log",
-    "syslog"
+    "elasticsearch"
   ],
   "dependencies": {
-    "shinken": ">=1.4"
+    "shinken": ">=2.0"
   },
   "license": "AGPL"
 }
