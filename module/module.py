@@ -35,10 +35,10 @@ from shinken.basemodule import BaseModule
 from shinken.log import logger
 
 properties = {
-'daemons': ['broker'],
-'type': 'es-log',
-'external': False,
-'phases': ['running'],
+    'daemons': ['broker'],
+    'type': 'es-log',
+    'external': False,
+    'phases': ['running'],
 }
 
 
@@ -46,6 +46,8 @@ properties = {
 def get_instance(plugin):
     name = plugin.get_name()
     elasticsearch_uri = plugin.elasticsearch_uri
+    index = plugin.index
+    doc_type  = plugin.doc_type
 
     logger.info("[ES Log] Get a Elasticsearch broker for plugin %s" % (name))
     instance = ESlog_broker(plugin)
@@ -58,9 +60,12 @@ class ESlog_broker(BaseModule):
     def __init__(self, modconf):
         BaseModule.__init__(self, modconf)
         self.elasticsearch_uri = getattr(modconf, 'elasticsearch_uri', None)
+        self.index = getattr(modconf, 'index', 'shinken')
+        self.doc_type = getattr(modconf, 'doc_type', 'shinken')
 
     def manage_log_brok(self, b):
         es = rawes.Elastic(self.elasticsearch_uri)
+        constructor = self.index + '/' + self.doc_type
 
         logger.debug("[ES Log] Module is loaded")
 
@@ -75,7 +80,7 @@ class ESlog_broker(BaseModule):
 
                 #print matchObj.groups()
 
-                es.post('shinken/shinken/', data={
+                es.post(constructor, data={
                     'datetime':     '',
                     'timestamp':    matchObj.group(1),
                     'severity':     matchObj.group(2),
@@ -85,7 +90,7 @@ class ESlog_broker(BaseModule):
                 logger.debug("[ES Log] commit.....")
 
             except ElasticException as e:
-                logger.error("[ES Log] An error occurred: ")
+                logger.error("[ES Log] An error occurred: %s:" % e.result)
                 logger.error("[ES Log] DATABASE ERROR!!!!!!!!!!!!!!!!!")
 
         if re.search("^\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3}", line):
@@ -96,7 +101,7 @@ class ESlog_broker(BaseModule):
 
                 #print matchObj.groups()
 
-                es.post('shinken/shinken/', data={
+                es.post(constructor, data={
                     'datetime':     matchObj.group(1),
                     'timestamp':    matchObj.group(2),
                     'severity':     matchObj.group(3),
@@ -106,7 +111,7 @@ class ESlog_broker(BaseModule):
                 logger.debug("[ES Log] commit.....")
 
             except ElasticException as e:
-                logger.error("[ES Log] An error occurred: ")
+                logger.error("[ES Log] An error occurred: %s:" % e.result)
                 logger.error("[ES Log] DATABASE ERROR!!!!!!!!!!!!!!!!!")
 
 
