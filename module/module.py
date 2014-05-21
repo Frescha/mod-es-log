@@ -75,7 +75,7 @@ class ESlog_broker(BaseModule):
         if re.search("^\[[0-9]*\] [A-Z][a-z]*.:", line):
             logger.debug("[ES Log] Non extensive data")
             try:
-                SearchStr = '(\[[0-9]*\]) (Info|Warning|Error|Debug) (\:.*)'
+                SearchStr = '(\[[0-9]*\]) (Info|Warning|Error|Debug) \:(.*)$'
                 matchObj = re.search(SearchStr.decode('utf-8'), line.decode('utf-8'), re.I | re.U)
 
                 #print matchObj.groups()
@@ -96,7 +96,7 @@ class ESlog_broker(BaseModule):
         if re.search("^\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3}", line):
             logger.debug("[ES Log] Extensive data")
             try:
-                SearchStr = '(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3}) (\[[0-9]*\]) (Info|Warning|Error|Debug) (\:.*)'
+                SearchStr = '(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3}) (\[[0-9]*\]) (Info|Warning|Error|Debug) \:(.*)$'
                 matchObj = re.search(SearchStr.decode('utf-8'), line.decode('utf-8'), re.I | re.U)
 
                 #print matchObj.groups()
