@@ -72,42 +72,27 @@ class ESlog_broker(BaseModule):
         data = b.data
         line = data['log']
         
-        if re.search("^\[[0-9]*\] [A-Z][a-z]*.:", line):
+        if re.search("^\[[0-9]*\]", line):
             logger.debug("[ES Log] Non extensive data")
 
             try:
-                SearchStr = '^\[(.*)\] (Info|Warning|Error|Debug) \:(.*)$'
+                SearchStr = '^\[(.*)\] (INFO|WARNING|ERROR|DEBUG)\: \[(.*)\](.*)$'
                 matchObj = re.search(SearchStr.decode('utf-8'), line.decode('utf-8'), re.I | re.U)
 
                 es.post(constructor, data={
                     'datetime':     '',
                     'timestamp':    matchObj.group(1),
                     'severity':     matchObj.group(2),
-                    'message' :     matchObj.group(3),
+                    'module' :      matchObj.group(3),
+                    'message' :     matchObj.group(4),
                     })
 
-                logger.debug("[ES Log] commit.....")
+                logger.debug("[ES Log] Data record are written to database")
 
             except ElasticException as e:
                 logger.error("[ES Log] An error occurred: %s:" % e.result)
                 logger.error("[ES Log] DATABASE ERROR!!!!!!!!!!!!!!!!!")
 
-        if re.search("^\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3}", line):
-            logger.debug("[ES Log] Extensive data")
+        else:
+            logger.debug("[ES Log] Nothing to commit...")
 
-            try:
-                SearchStr = '(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3}) \[(.*)\] (Info|Warning|Error|Debug) \:(.*)$'
-                matchObj = re.search(SearchStr.decode('utf-8'), line.decode('utf-8'), re.I | re.U)
-
-                es.post(constructor, data={
-                    'datetime':     matchObj.group(1),
-                    'timestamp':    matchObj.group(2),
-                    'severity':     matchObj.group(3),
-                    'message' :     matchObj.group(4),
-                })
-
-                logger.debug("[ES Log] commit.....")
-
-            except ElasticException as e:
-                logger.error("[ES Log] An error occurred: %s:" % e.result)
-                logger.error("[ES Log] DATABASE ERROR!!!!!!!!!!!!!!!!!")
