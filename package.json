@@ -1,7 +1,7 @@
 {
   "name": "es-log",
   "types": ["module"],
-  "version": "0.4",
+  "version": "0.5",
   "homepage": "https://github.com/Frescha/mod-es-log",
   "author": "Andreas Karfusehr",
   "description": "Export data to a Elasticsearch server",
@@ -19,7 +19,7 @@
     "elasticsearch"
   ],
   "dependencies": {
-    "shinken": ">=2.0"
+    "shinken": ">=2.0.3"
   },
   "license": "AGPL"
 }

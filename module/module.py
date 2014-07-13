@@ -93,6 +93,6 @@ class ESlog_broker(BaseModule):
                 logger.error("[ES Log] An error occurred: %s:" % e.result)
                 logger.error("[ES Log] DATABASE ERROR!!!!!!!!!!!!!!!!!")
 
-        else
+        else:
             logger.debug("[ES Log] Nothing to commit...")
 
