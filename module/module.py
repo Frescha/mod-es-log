@@ -168,6 +168,27 @@ class ESlog_broker(BaseModule):
             except ElasticException as e:
                 logger.error("[ES Log] An error occurred: %s:" % e.result)
                 logger.error("[ES Log] DATABASE ERROR!!!!!!!!!!!!!!!!!")
+        
+        # TIMEPERIOD
+        if re.search("\[([0-9]{10})\] (TIMEPERIOD) (TRANSITION): (.*)$", line):
+            logger.debug("[ES Log] Non extensive data")
+
+            try:
+                SearchStr = '\[([0-9]{10})\] (TIMEPERIOD) (TRANSITION): (.*)$'
+                matchObj = re.search(SearchStr.decode('utf-8'), line.decode('utf-8'), re.I | re.U)
+
+                es.post(self.index + '/timeperiod', data={
+                    'timestamp':    matchObj.group(1),
+                    'event_type':    matchObj.group(2),  
+                    'state':    matchObj.group(3),  
+                    'output':    matchObj.group(4),  
+                    })
+
+                logger.debug("[ES Log] Data record are written to database")
+
+            except ElasticException as e:
+                logger.error("[ES Log] An error occurred: %s:" % e.result)
+                logger.error("[ES Log] DATABASE ERROR!!!!!!!!!!!!!!!!!")
 
         else:
             logger.debug("[ES Log] Nothing to commit...")
