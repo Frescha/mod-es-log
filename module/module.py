@@ -73,19 +73,17 @@ class ESlog_broker(BaseModule):
         line = data['log']
         
         # Stuff
-        if re.search("^\[[0-9]*\]", line):
+        if re.search("^\[(.*)\] (INFO|WARNING|ERROR|DEBUG)\: (.*)$", line):
             logger.debug("[ES Log] Non extensive data")
 
             try:
-                SearchStr = '^\[(.*)\] (INFO|WARNING|ERROR|DEBUG)\: \[(.*)\](.*)$'
+                SearchStr = '^\[(.*)\] (INFO|WARNING|ERROR|DEBUG)\: (.*)$'
                 matchObj = re.search(SearchStr.decode('utf-8'), line.decode('utf-8'), re.I | re.U)
 
-                es.post(constructor, data={
-                    'datetime':     '',
+                es.post('shinken-development/log', data={
                     'timestamp':    matchObj.group(1),
                     'severity':     matchObj.group(2),
-                    'module' :      matchObj.group(3),
-                    'message' :     matchObj.group(4),
+                    'message' :      matchObj.group(3),
                     })
 
                 logger.debug("[ES Log] Data record are written to database")
@@ -95,14 +93,14 @@ class ESlog_broker(BaseModule):
                 logger.error("[ES Log] DATABASE ERROR!!!!!!!!!!!!!!!!!")
 
         # NOTIFICATION
-        if re.search("\[([0-9]{10})\] (HOST|SERVICE) (NOTIFICATION): ([^\;]*);([^\;]*);(?:([^\;]*);)?([^\;]*);([^\;]*);(ACKNOWLEDGEMENT)?.*", line):
+        elif re.search("\[([0-9]{10})\] (HOST|SERVICE) (NOTIFICATION): ([^\;]*);([^\;]*);(?:([^\;]*);)?([^\;]*);([^\;]*);(ACKNOWLEDGEMENT)?.*", line):
             logger.debug("[ES Log] Non extensive data")
 
             try:
                 SearchStr = '\[([0-9]{10})\] (HOST|SERVICE) (NOTIFICATION): ([^\;]*);([^\;]*);(?:([^\;]*);)?([^\;]*);([^\;]*);(ACKNOWLEDGEMENT)?.*'
                 matchObj = re.search(SearchStr.decode('utf-8'), line.decode('utf-8'), re.I | re.U)
 
-                es.post(self.index + '/notification', data={
+                es.post('shinken-development/notification', data={
                     'timestamp':    matchObj.group(1),
                     'notification_type': matchObj.group(2),  # 'SERVICE' (or could be 'HOST')
                     'event_type': matchObj.group(3),  # 'NOTIFICATION'
@@ -121,14 +119,14 @@ class ESlog_broker(BaseModule):
                 logger.error("[ES Log] DATABASE ERROR!!!!!!!!!!!!!!!!!")
 
         # ALERT
-        if re.search("^\[([0-9]{10})] (HOST|SERVICE) (ALERT): ([^\;]*);(?:([^\;]*);)?([^\;]*);([^\;]*);([^\;]*);([^\;]*)", line):
+        elif re.search("^\[([0-9]{10})] (HOST|SERVICE) (ALERT): ([^\;]*);(?:([^\;]*);)?([^\;]*);([^\;]*);([^\;]*);([^\;]*)", line):
             logger.debug("[ES Log] Non extensive data")
 
             try:
                 SearchStr = '^\[([0-9]{10})] (HOST|SERVICE) (ALERT): ([^\;]*);(?:([^\;]*);)?([^\;]*);([^\;]*);([^\;]*);([^\;]*)'
                 matchObj = re.search(SearchStr.decode('utf-8'), line.decode('utf-8'), re.I | re.U)
 
-                es.post((self.index + '/alert', data={
+                es.post('shinken-development/alert', data={
                     'timestamp':    matchObj.group(1),
                     'alert_type':    matchObj.group(2),  # 'SERVICE' (or could be 'HOST')
                     'event_type':    matchObj.group(3),  # 'ALERT'
@@ -147,14 +145,14 @@ class ESlog_broker(BaseModule):
                 logger.error("[ES Log] DATABASE ERROR!!!!!!!!!!!!!!!!!")
 
         # DOWNTIME
-        if re.search("^\[([0-9]{10})\] (HOST|SERVICE) (DOWNTIME) ALERT: ([^\;]*);(STARTED|STOPPED|CANCELLED);(.*)", line):
+        elif re.search("^\[([0-9]{10})\] (HOST|SERVICE) (DOWNTIME) ALERT: ([^\;]*);(STARTED|STOPPED|CANCELLED);(.*)", line):
             logger.debug("[ES Log] Non extensive data")
 
             try:
                 SearchStr = '^\[([0-9]{10})\] (HOST|SERVICE) (DOWNTIME) ALERT: ([^\;]*);(STARTED|STOPPED|CANCELLED);(.*)'
                 matchObj = re.search(SearchStr.decode('utf-8'), line.decode('utf-8'), re.I | re.U)
 
-                es.post(self.index + '/downtine', data={
+                es.post('shinken-development/downtine', data={
                     'timestamp':    matchObj.group(1),
                     'downtime_type':    matchObj.group(2),  # '(SERVICE or could be 'HOST')
                     'event_type':    matchObj.group(3),  # 'DOWNTIME'
@@ -170,14 +168,14 @@ class ESlog_broker(BaseModule):
                 logger.error("[ES Log] DATABASE ERROR!!!!!!!!!!!!!!!!!")
         
         # TIMEPERIOD
-        if re.search("\[([0-9]{10})\] (TIMEPERIOD) (TRANSITION): (.*)$", line):
+        elif re.search("\[([0-9]{10})\] (TIMEPERIOD) (TRANSITION): (.*)$", line):
             logger.debug("[ES Log] Non extensive data")
 
             try:
                 SearchStr = '\[([0-9]{10})\] (TIMEPERIOD) (TRANSITION): (.*)$'
                 matchObj = re.search(SearchStr.decode('utf-8'), line.decode('utf-8'), re.I | re.U)
 
-                es.post(self.index + '/timeperiod', data={
+                es.post('shinken-development/timeperiod', data={
                     'timestamp':    matchObj.group(1),
                     'event_type':    matchObj.group(2),  
                     'state':    matchObj.group(3),  
