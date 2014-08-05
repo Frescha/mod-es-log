@@ -72,19 +72,114 @@ class ESlog_broker(BaseModule):
         data = b.data
         line = data['log']
         
-        if re.search("^\[[0-9]*\]", line):
+        # Stuff
+        if re.search("^\[(.*)\] (INFO|WARNING|ERROR|DEBUG)\: (.*)$", line):
             logger.debug("[ES Log] Non extensive data")
 
             try:
-                SearchStr = '^\[(.*)\] (INFO|WARNING|ERROR|DEBUG)\: \[(.*)\](.*)$'
+                SearchStr = '^\[(.*)\] (INFO|WARNING|ERROR|DEBUG)\: (.*)$'
                 matchObj = re.search(SearchStr.decode('utf-8'), line.decode('utf-8'), re.I | re.U)
 
-                es.post(constructor, data={
-                    'datetime':     '',
+                es.post('shinken-development/log', data={
                     'timestamp':    matchObj.group(1),
                     'severity':     matchObj.group(2),
-                    'module' :      matchObj.group(3),
-                    'message' :     matchObj.group(4),
+                    'message' :      matchObj.group(3),
+                    })
+
+                logger.debug("[ES Log] Data record are written to database")
+
+            except ElasticException as e:
+                logger.error("[ES Log] An error occurred: %s:" % e.result)
+                logger.error("[ES Log] DATABASE ERROR!!!!!!!!!!!!!!!!!")
+
+        # NOTIFICATION
+        elif re.search("\[([0-9]{10})\] (HOST|SERVICE) (NOTIFICATION): ([^\;]*);([^\;]*);(?:([^\;]*);)?([^\;]*);([^\;]*);(ACKNOWLEDGEMENT)?.*", line):
+            logger.debug("[ES Log] Non extensive data")
+
+            try:
+                SearchStr = '\[([0-9]{10})\] (HOST|SERVICE) (NOTIFICATION): ([^\;]*);([^\;]*);(?:([^\;]*);)?([^\;]*);([^\;]*);(ACKNOWLEDGEMENT)?.*'
+                matchObj = re.search(SearchStr.decode('utf-8'), line.decode('utf-8'), re.I | re.U)
+
+                es.post('shinken-development/notification', data={
+                    'timestamp':    matchObj.group(1),
+                    'notification_type': matchObj.group(2),  # 'SERVICE' (or could be 'HOST')
+                    'event_type': matchObj.group(3),  # 'NOTIFICATION'
+                    'contact': matchObj.group(4),  # 'admin'
+                    'hostname': matchObj.group(5),  # 'localhost'
+                    'service_desc': matchObj.group(6),  # 'check-ssh' (or could be None)
+                    'state': matchObj.group(7),  # 'CRITICAL'
+                    'notification_method': matchObj.group(8),  # 'notify-service-by-email'
+                    'acknownledgement': matchObj.group(9),  # None or 'ACKNOWLEDGEMENT'
+                    })
+
+                logger.debug("[ES Log] Data record are written to database")
+
+            except ElasticException as e:
+                logger.error("[ES Log] An error occurred: %s:" % e.result)
+                logger.error("[ES Log] DATABASE ERROR!!!!!!!!!!!!!!!!!")
+
+        # ALERT
+        elif re.search("^\[([0-9]{10})] (HOST|SERVICE) (ALERT): ([^\;]*);(?:([^\;]*);)?([^\;]*);([^\;]*);([^\;]*);([^\;]*)", line):
+            logger.debug("[ES Log] Non extensive data")
+
+            try:
+                SearchStr = '^\[([0-9]{10})] (HOST|SERVICE) (ALERT): ([^\;]*);(?:([^\;]*);)?([^\;]*);([^\;]*);([^\;]*);([^\;]*)'
+                matchObj = re.search(SearchStr.decode('utf-8'), line.decode('utf-8'), re.I | re.U)
+
+                es.post('shinken-development/alert', data={
+                    'timestamp':    matchObj.group(1),
+                    'alert_type':    matchObj.group(2),  # 'SERVICE' (or could be 'HOST')
+                    'event_type':    matchObj.group(3),  # 'ALERT'
+                    'hostname':    matchObj.group(4),  # 'localhost'
+                    'service_desc':    matchObj.group(5),  # 'cpu load maui' (or could be None)
+                    'state':    matchObj.group(6),  # 'WARNING'
+                    'state_type':    matchObj.group(7),  # 'HARD'
+                    'attempts':    matchObj.group(8),  # '4'
+                    'output':    matchObj.group(9),  # 'WARNING - load average: 5.04, 4.67, 5.04'
+                    })
+
+                logger.debug("[ES Log] Data record are written to database")
+
+            except ElasticException as e:
+                logger.error("[ES Log] An error occurred: %s:" % e.result)
+                logger.error("[ES Log] DATABASE ERROR!!!!!!!!!!!!!!!!!")
+
+        # DOWNTIME
+        elif re.search("^\[([0-9]{10})\] (HOST|SERVICE) (DOWNTIME) ALERT: ([^\;]*);(STARTED|STOPPED|CANCELLED);(.*)", line):
+            logger.debug("[ES Log] Non extensive data")
+
+            try:
+                SearchStr = '^\[([0-9]{10})\] (HOST|SERVICE) (DOWNTIME) ALERT: ([^\;]*);(STARTED|STOPPED|CANCELLED);(.*)'
+                matchObj = re.search(SearchStr.decode('utf-8'), line.decode('utf-8'), re.I | re.U)
+
+                es.post('shinken-development/downtine', data={
+                    'timestamp':    matchObj.group(1),
+                    'downtime_type':    matchObj.group(2),  # '(SERVICE or could be 'HOST')
+                    'event_type':    matchObj.group(3),  # 'DOWNTIME'
+                    'hostname':    matchObj.group(4),  # 'maast64'
+                    'state':    matchObj.group(5),  # 'STARTED'
+                    'output':    matchObj.group(6),  # 'Host has entered a period of scheduled downtime'
+                    })
+
+                logger.debug("[ES Log] Data record are written to database")
+
+            except ElasticException as e:
+                logger.error("[ES Log] An error occurred: %s:" % e.result)
+                logger.error("[ES Log] DATABASE ERROR!!!!!!!!!!!!!!!!!")
+        
+        # TIMEPERIOD
+        elif re.search("\[([0-9]{10})\] (TIMEPERIOD) (TRANSITION): (.*)$", line):
+            logger.debug("[ES Log] Non extensive data")
+
+            try:
+                SearchStr = '\[([0-9]{10})\] (TIMEPERIOD) (TRANSITION): (.*)$'
+                matchObj = re.search(SearchStr.decode('utf-8'), line.decode('utf-8'), re.I | re.U)
+
+                es.post('shinken-development/timeperiod', data={
+                    'timestamp':    matchObj.group(1),
+                    'event_type':    matchObj.group(2),  
+                    'state':    matchObj.group(3),  
+                    'output':    matchObj.group(4),  
                     })
 
                 logger.debug("[ES Log] Data record are written to database")
