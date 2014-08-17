@@ -47,9 +47,9 @@ def get_instance(plugin):
     name = plugin.get_name()
     elasticsearch_uri = plugin.elasticsearch_uri
     index = plugin.index
-    doc_type  = plugin.doc_type
 
     logger.info("[ES Log] Get a Elasticsearch broker for plugin %s" % (name))
+    logger.debug("[ES Log] Index %s loaded" % (index))
     instance = ESlog_broker(plugin)
     return instance
 
@@ -61,11 +61,9 @@ class ESlog_broker(BaseModule):
         BaseModule.__init__(self, modconf)
         self.elasticsearch_uri = getattr(modconf, 'elasticsearch_uri', None)
         self.index = getattr(modconf, 'index', 'shinken')
-        self.doc_type = getattr(modconf, 'doc_type', 'shinken')
 
     def manage_log_brok(self, b):
         es = rawes.Elastic(self.elasticsearch_uri)
-        constructor = self.index + '/' + self.doc_type
 
         logger.debug("[ES Log] Module is loaded")
 
@@ -80,7 +78,7 @@ class ESlog_broker(BaseModule):
                 SearchStr = '^\[(.*)\] (INFO|WARNING|ERROR|DEBUG)\: (.*)$'
                 matchObj = re.search(SearchStr.decode('utf-8'), line.decode('utf-8'), re.I | re.U)
 
-                es.post('shinken-development/log', data={
+                es.post(self.index + '/log', data={
                     'timestamp':    matchObj.group(1),
                     'severity':     matchObj.group(2),
                     'message' :      matchObj.group(3),
@@ -100,7 +98,7 @@ class ESlog_broker(BaseModule):
                 SearchStr = '\[([0-9]{10})\] (HOST|SERVICE) (NOTIFICATION): ([^\;]*);([^\;]*);(?:([^\;]*);)?([^\;]*);([^\;]*);(ACKNOWLEDGEMENT)?.*'
                 matchObj = re.search(SearchStr.decode('utf-8'), line.decode('utf-8'), re.I | re.U)
 
-                es.post('shinken-development/notification', data={
+                es.post(self.index + '/notification', data={
                     'timestamp':    matchObj.group(1),
                     'notification_type': matchObj.group(2),  # 'SERVICE' (or could be 'HOST')
                     'event_type': matchObj.group(3),  # 'NOTIFICATION'
@@ -126,7 +124,7 @@ class ESlog_broker(BaseModule):
                 SearchStr = '^\[([0-9]{10})] (HOST|SERVICE) (ALERT): ([^\;]*);(?:([^\;]*);)?([^\;]*);([^\;]*);([^\;]*);([^\;]*)'
                 matchObj = re.search(SearchStr.decode('utf-8'), line.decode('utf-8'), re.I | re.U)
 
-                es.post('shinken-development/alert', data={
+                es.post(self.index + '/alert', data={
                     'timestamp':    matchObj.group(1),
                     'alert_type':    matchObj.group(2),  # 'SERVICE' (or could be 'HOST')
                     'event_type':    matchObj.group(3),  # 'ALERT'
@@ -152,7 +150,7 @@ class ESlog_broker(BaseModule):
                 SearchStr = '^\[([0-9]{10})\] (HOST|SERVICE) (DOWNTIME) ALERT: ([^\;]*);(STARTED|STOPPED|CANCELLED);(.*)'
                 matchObj = re.search(SearchStr.decode('utf-8'), line.decode('utf-8'), re.I | re.U)
 
-                es.post('shinken-development/downtine', data={
+                es.post(self.index + '/downtine', data={
                     'timestamp':    matchObj.group(1),
                     'downtime_type':    matchObj.group(2),  # '(SERVICE or could be 'HOST')
                     'event_type':    matchObj.group(3),  # 'DOWNTIME'
@@ -175,7 +173,7 @@ class ESlog_broker(BaseModule):
                 SearchStr = '\[([0-9]{10})\] (TIMEPERIOD) (TRANSITION): (.*)$'
                 matchObj = re.search(SearchStr.decode('utf-8'), line.decode('utf-8'), re.I | re.U)
 
-                es.post('shinken-development/timeperiod', data={
+                es.post(self.index + '/timeperiod', data={
                     'timestamp':    matchObj.group(1),
                     'event_type':    matchObj.group(2),  
                     'state':    matchObj.group(3),  
